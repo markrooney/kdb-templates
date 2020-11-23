@@ -28,11 +28,11 @@
 #define _MARKROONEY_KDB_H
 
 #if ((__cplusplus < 201703L))
-    #error "this header file requires a C++17 compatible compiler"
+#error "this header file requires C++17 features. please use a compatible compiler and flags"
 #endif
 
 #ifndef KXVER
-    #error "please include 'k.h' and set KXVER before including this header file"
+#error "please include 'k.h' and set KXVER before including this header file"
 #endif
 
 #include <array>    // for std::array
@@ -52,8 +52,8 @@ using std::size_t;
 */
 namespace kdb {
 
-    template<typename T>
-    struct custom_type_impl;
+template<typename T>
+struct custom_type_impl;
 
 #define CREATE_ATOM_TYPE(_mac_nat, _mac_tag, _mac_lst, _mac_nul, _mac_cons, _mac_acc)       \
     template<>                                                                              \
@@ -70,421 +70,415 @@ namespace kdb {
         }                                                                                   \
     };
 
-    CREATE_ATOM_TYPE(type::atom_byte,   KG, kG, ng, kg, g)
-    CREATE_ATOM_TYPE(type::atom_char,   KC, kC, ' ', kc, g)
-    CREATE_ATOM_TYPE(type::atom_bool,   KB, kC, false, kb, g)
-    CREATE_ATOM_TYPE(type::atom_short,  KH, kH, nh, kh, h)
-    CREATE_ATOM_TYPE(type::atom_int,    KI, kI, ni, ki, i)
-    CREATE_ATOM_TYPE(type::atom_long,   KJ, kJ, nj, kj, j)
-    CREATE_ATOM_TYPE(type::atom_real,   KE, kE, ne, ke, e)
-    CREATE_ATOM_TYPE(type::atom_float,  KF, kF, nf, kf, f)
+CREATE_ATOM_TYPE(type::atom_byte, KG, kG, ng, kg, g)
+CREATE_ATOM_TYPE(type::atom_char, KC, kC, ' ', kc, g)
+CREATE_ATOM_TYPE(type::atom_bool, KB, kC, false, kb, g)
+CREATE_ATOM_TYPE(type::atom_short, KH, kH, nh, kh, h)
+CREATE_ATOM_TYPE(type::atom_int, KI, kI, ni, ki, i)
+CREATE_ATOM_TYPE(type::atom_long, KJ, kJ, nj, kj, j)
+CREATE_ATOM_TYPE(type::atom_real, KE, kE, ne, ke, e)
+CREATE_ATOM_TYPE(type::atom_float, KF, kF, nf, kf, f)
 
-    template<>
-    struct custom_type_impl<type::atom_symbol> {
-        static const int tag = KS;
-        static inline K encode(const type::atom_symbol &x) noexcept { return ks(ss((S) x.c_str())); }
-        static inline void set_list(K obj, int idx, const type::atom_symbol &x) { kS(obj)[idx] = ss((S) x.c_str()); }
-        static inline type::atom_symbol get_list(K obj, int idx) { return type::atom_symbol{kS(obj)[idx]}; }
-        static inline type::atom_symbol access(K obj) noexcept { return type::atom_symbol{obj->s}; }
-        static inline bool decode(K obj, type::atom_symbol &result) noexcept {
-            if (obj->t != -tag) { return false; }
-            result = access(obj);
-            return true;
-        }
-    };
+template<>
+struct custom_type_impl<type::atom_symbol> {
+  static const int tag = KS;
+  static inline K encode(const type::atom_symbol &x) noexcept { return ks(ss((S) x.c_str())); }
+  static inline void set_list(K obj, int idx, const type::atom_symbol &x) { kS(obj)[idx] = ss((S) x.c_str()); }
+  static inline type::atom_symbol get_list(K obj, int idx) { return type::atom_symbol{kS(obj)[idx]}; }
+  static inline type::atom_symbol access(K obj) noexcept { return type::atom_symbol{obj->s}; }
+  static inline bool decode(K obj, type::atom_symbol &result) noexcept {
+    if (obj->t != -tag) {
+      return false;
+    }
+    result = access(obj);
+    return true;
+  }
+};
 
-    template<template<typename, typename> class C, typename T, typename A>
-    struct custom_type_impl<C<T, A>> {
-        static const int tag = 0;
-        static inline void set_list(K obj, int idx, const C<T, A> &x) { kK(obj)[idx] = custom_type_impl<C<T, A>>::encode(x); }
-        static inline C<T, A> get_list(K obj, int idx) {
-            C<T, A> res;
-            custom_type_impl<C<T, A>>::decode(kK(obj)[idx], res);
-            return std::move(res);
-        }
+template<template<typename, typename> class C, typename T, typename A>
+struct custom_type_impl<C<T, A>> {
+  static const int tag = 0;
+  static inline void set_list(K obj, int idx, const C<T, A> &x) { kK(obj)[idx] = custom_type_impl<C<T, A>>::encode(x); }
+  static inline C<T, A> get_list(K obj, int idx) {
+    C<T, A> res;
+    custom_type_impl<C<T, A>>::decode(kK(obj)[idx], res);
+    return std::move(res);
+  }
 
-        static inline K encode(const C<T, A> &x) noexcept {
-            size_t size = x.size();
-            K res = ktn(custom_type_impl<T>::tag, size);
-            for (int i = 0; i < size; i++)
-                custom_type_impl<T>::set_list(res, i, x[i]);
-            return res;
-        }
+  static inline K encode(const C<T, A> &x) noexcept {
+    size_t size = x.size();
+    K res = ktn(custom_type_impl<T>::tag, size);
+    for (std::size_t i = 0; i < size; i++)
+      custom_type_impl<T>::set_list(res, i, x[i]);
+    return res;
+  }
 
-        static inline bool decode(K obj, C<T, A> &result) noexcept {
-            if (obj->t != custom_type_impl<T>::tag) {
-                return false;
-            }
-
-            size_t size = obj->n;
-            C<T, A> temp(size);
-            for (int i = 0; i < size; i++) {
-                temp[i] = custom_type_impl<T>::get_list(obj, i);
-            }
-
-            result = std::move(temp);
-            return true;
-        }
-    };
-
-    template<template<typename, size_t> class C, typename T, size_t N>
-    struct custom_type_impl<C<T, N>> {
-        static inline K encode(const C<T, N> &x) noexcept {
-            size_t size = N;
-            K res = ktn(custom_type_impl<T>::tag, size);
-            for (int i = 0; i < size; i++)
-                custom_type_impl<T>::set_list(res, i, x[i]);
-            return res;
-        }
-    };
-
-    // --------------------------------------------------------------------------------
-    // ------------------------- Variant K Object Support -----------------------------
-    // --------------------------------------------------------------------------------
-
-    // Template deduction guides required for C++17 with std::visit. Should be able to remove these
-    // with support for C++20. See examples at https://en.cppreference.com/w/cpp/utility/variant/visit
-    // for more info on these deduction guides.
-    template<class... Ts>
-    struct overloaded : Ts... { using Ts::operator()...; };
-    template<class... Ts>
-    overloaded(Ts...) -> overloaded<Ts...>;
-
-    template<>
-    struct custom_type_impl<kdb::type::atom_any> {
-        static const int tag = 0;
-
-        static inline K encode(const kdb::type::atom_any &x) noexcept {
-            return std::visit([](auto arg) { return custom_type_impl<decltype(arg)>::encode(arg); }, x);
-        }
-
-        static inline void set_list(K obj, int idx, const type::atom_any &x) {
-            kK(obj)[idx] = encode(x);
-        }
-
-        static inline type::atom_any get_list(K obj, int idx) {
-            type::atom_any res;
-            decode(kK(obj)[idx], res);
-            return res;
-        }
-
-        static inline bool decode(K x, type::atom_any &result) noexcept {
-            if (xt >= 0) {
-                return false;
-            }
-
-            switch (xt) {
-                CS(-custom_type_impl<type::atom_byte>::tag,   result = custom_type_impl<type::atom_byte>::access(x))
-                CS(-custom_type_impl<type::atom_bool>::tag,   result = custom_type_impl<type::atom_bool>::access(x))
-                CS(-custom_type_impl<type::atom_short>::tag,  result = custom_type_impl<type::atom_short>::access(x))
-                CS(-custom_type_impl<type::atom_int>::tag,    result = custom_type_impl<type::atom_int>::access(x))
-                CS(-custom_type_impl<type::atom_long>::tag,   result = custom_type_impl<type::atom_long>::access(x))
-                CS(-custom_type_impl<type::atom_real>::tag,   result = custom_type_impl<type::atom_real>::access(x))
-                CS(-custom_type_impl<type::atom_float>::tag,  result = custom_type_impl<type::atom_float>::access(x))
-                CS(-custom_type_impl<type::atom_char>::tag,   result = custom_type_impl<type::atom_char>::access(x))
-                CS(-custom_type_impl<type::atom_symbol>::tag, result = custom_type_impl<type::atom_symbol>::access(x))
-                default:
-                    return false;
-            }
-
-            return true;
-        }
-    };
-
-    static bool contains_lists(K x) {
-        if (xt != 0)
-            return false;
-
-        for (int i = 0; i < x->n; i++)
-            if ((kK(x)[i]->t) >= 0)
-                return true;
-
-        return false;
+  static inline bool decode(K obj, C<T, A> &result) noexcept {
+    if (obj->t != custom_type_impl<T>::tag) {
+      return false;
     }
 
-    static K any_list_encoder(const kdb::type::any_list &x);
-    static kdb::type::any_list any_list_decoder(K x);
-
-    template<>
-    struct custom_type_impl<type::nested_list> {
-        static const int tag = 0;
-
-        static inline K encode(const kdb::type::nested_list &x) noexcept {
-            K list = ktn(0, 0);
-            for (const auto &sub_list : x) {
-                jk(&list, any_list_encoder(sub_list.value));
-            }
-            return list;
-        }
-
-        static inline bool decode(K x, type::nested_list &result) noexcept {
-            for (int i = 0; i < xn; i++) {
-                result.push_back(any_list_decoder(kK(x)[i]));
-            }
-            return true;
-        }
-    };
-
-    static K any_list_encoder(const kdb::type::any_list &x) {
-        return std::visit([](auto arg) { return custom_type_impl<decltype(arg)>::encode(arg); }, x);
+    size_t size = obj->n;
+    C<T, A> temp(size);
+    for (std::size_t i = 0; i < size; i++) {
+      temp[i] = custom_type_impl<T>::get_list(obj, i);
     }
 
-    static kdb::type::any_list any_list_decoder(K x) {
-        type::list_mixed a;
-        type::list_byte b;
-        type::list_bool c;
-        type::list_short d;
-        type::list_int e;
-        type::list_long f;
-        type::list_real g;
-        type::list_float h;
-        type::list_char i;
-        type::list_symbol j;
-        type::nested_list n;
+    result = std::move(temp);
+    return true;
+  }
+};
 
-        switch (xt) {
-            CS(0,
-               if (contains_lists(x)) { custom_type_impl<type::nested_list>::decode(x, n); return n; } else {custom_type_impl<type::list_mixed>::decode(x, a); return a; })
-            CS(custom_type_impl<type::atom_byte>::tag,    custom_type_impl<type::list_byte>::decode(x, b); return b; )
-            CS(custom_type_impl<type::atom_bool>::tag,    custom_type_impl<type::list_bool>::decode(x, c); return c; )
-            CS(custom_type_impl<type::atom_short>::tag,   custom_type_impl<type::list_short>::decode(x, d); return d; )
-            CS(custom_type_impl<type::atom_int>::tag,     custom_type_impl<type::list_int>::decode(x, e); return e; )
-            CS(custom_type_impl<type::atom_long>::tag,    custom_type_impl<type::list_long>::decode(x, f); return f; )
-            CS(custom_type_impl<type::atom_real>::tag,    custom_type_impl<type::list_real>::decode(x, g); return g;)
-            CS(custom_type_impl<type::atom_float>::tag,   custom_type_impl<type::list_float>::decode(x, h); return h;)
-            CS(custom_type_impl<type::atom_char>::tag,    custom_type_impl<type::list_char>::decode(x, i); return i;)
-            CS(custom_type_impl<type::atom_symbol>::tag,  custom_type_impl<type::list_symbol>::decode(x, j); return j;)
-            default:
-                return kdb::type::list_mixed{};
-        }
+template<template<typename, size_t> class C, typename T, size_t N>
+struct custom_type_impl<C<T, N>> {
+  static inline K encode(const C<T, N> &x) noexcept {
+    size_t size = N;
+    K res = ktn(custom_type_impl<T>::tag, size);
+    for (int i = 0; i < size; i++)
+      custom_type_impl<T>::set_list(res, i, x[i]);
+    return res;
+  }
+};
+
+// --------------------------------------------------------------------------------
+// ------------------------- Variant K Object Support -----------------------------
+// --------------------------------------------------------------------------------
+template<>
+struct custom_type_impl<kdb::type::atom_any> {
+  static const int tag = 0;
+
+  static inline K encode(const kdb::type::atom_any &x) noexcept {
+    return std::visit([](auto arg) { return custom_type_impl<decltype(arg)>::encode(arg); }, x);
+  }
+
+  static inline void set_list(K obj, int idx, const type::atom_any &x) {
+    kK(obj)[idx] = encode(x);
+  }
+
+  static inline type::atom_any get_list(K obj, int idx) {
+    type::atom_any res;
+    decode(kK(obj)[idx], res);
+    return res;
+  }
+
+  static inline bool decode(K x, type::atom_any &result) noexcept {
+    if (xt >= 0) {
+      return false;
     }
 
-    // TODO :: implement custom_type_impl<list_any> so that this example will compile
-    template<>
-    struct custom_type_impl<kdb::type::any_list> {
-        static const int tag = 0;
+    switch (xt) {
+    CS(-custom_type_impl<type::atom_byte>::tag, result = custom_type_impl<type::atom_byte>::access(x))
+    CS(-custom_type_impl<type::atom_bool>::tag, result = custom_type_impl<type::atom_bool>::access(x))
+    CS(-custom_type_impl<type::atom_short>::tag, result = custom_type_impl<type::atom_short>::access(x))
+    CS(-custom_type_impl<type::atom_int>::tag, result = custom_type_impl<type::atom_int>::access(x))
+    CS(-custom_type_impl<type::atom_long>::tag, result = custom_type_impl<type::atom_long>::access(x))
+    CS(-custom_type_impl<type::atom_real>::tag, result = custom_type_impl<type::atom_real>::access(x))
+    CS(-custom_type_impl<type::atom_float>::tag, result = custom_type_impl<type::atom_float>::access(x))
+    CS(-custom_type_impl<type::atom_char>::tag, result = custom_type_impl<type::atom_char>::access(x))
+    CS(-custom_type_impl<type::atom_symbol>::tag, result = custom_type_impl<type::atom_symbol>::access(x))
+    default:return false;
+    }
 
-        static inline K encode(const kdb::type::any_list &x) noexcept {
-            return any_list_encoder(x);
-        }
+    return true;
+  }
+};
 
-        static inline void set_list(K obj, int idx, const type::any_list &x) {
-            kK(obj)[idx] = encode(x);
-        }
+static bool contains_lists(K x) {
+  if (xt != 0)
+    return false;
 
-        static inline type::any_list get_list(K obj, int idx) {
-            type::any_list res;
-            decode(kK(obj)[idx], res);
-            return res;
-        }
+  for (int i = 0; i < x->n; i++)
+    if ((kK(x)[i]->t) >= 0)
+      return true;
 
-        static inline bool decode(K x, type::any_list &result) noexcept {
-            if ((xt < 0) or (xt > 20))
-                return false;
-            result = any_list_decoder(x);
-            return true;
-        }
-    };
+  return false;
+}
 
-    // Handles the c++ standard map data types
-    template<template<typename, typename, typename, typename, typename> class C, typename KeyType, typename ValType, typename Hash, typename Equal, typename Alloc>
-    struct custom_type_impl<C<KeyType, ValType, Hash, Equal, Alloc>> {
-        static const int tag = XD;
+static K any_list_encoder(const kdb::type::any_list &x);
+static kdb::type::any_list any_list_decoder(K x);
 
-        static inline void set_list(K obj, int idx, const C<KeyType, ValType, Hash, Equal, Alloc> &x) {
-            kK(obj)[idx] = custom_type_impl<C<KeyType, ValType, Hash, Equal, Alloc>>::encode(x);
-        }
+template<>
+struct custom_type_impl<type::nested_list> {
+  static const int tag = 0;
 
-        static inline C<KeyType, ValType, Hash, Equal, Alloc> get_list(K obj, int idx) {
-            C<KeyType, ValType, Hash, Equal, Alloc> res;
-            custom_type_impl<C<KeyType, ValType, Hash, Equal, Alloc>>::decode(kK(obj)[idx], res);
-            return std::move(res);
-        }
+  static inline K encode(const kdb::type::nested_list &x) noexcept {
+    K list = ktn(0, 0);
+    for (const auto &sub_list : x) {
+      jk(&list, any_list_encoder(sub_list.value));
+    }
+    return list;
+  }
 
-        static inline K encode(const C<KeyType, ValType, Hash, Equal, Alloc> &x) noexcept {
-            size_t size = x.size();
-            K keys = ktn(custom_type_impl<KeyType>::tag, size);
-            K values = ktn(custom_type_impl<ValType>::tag, size);
+  static inline bool decode(K x, type::nested_list &result) noexcept {
+    for (int i = 0; i < xn; i++) {
+      result.push_back(any_list_decoder(kK(x)[i]));
+    }
+    return true;
+  }
+};
 
-            int i = 0;
-            for (const auto &pair : x) {
-                custom_type_impl<KeyType>::set_list(keys, i, pair.first);
-                custom_type_impl<ValType>::set_list(values, i, pair.second);
-                i++;
-            }
+static K any_list_encoder(const kdb::type::any_list &x) {
+  return std::visit([](auto arg) { return custom_type_impl<decltype(arg)>::encode(arg); }, x);
+}
 
-            return xD(keys, values);
-        }
+static kdb::type::any_list any_list_decoder(K x) {
+  type::list_mixed a;
+  type::list_byte b;
+  type::list_bool c;
+  type::list_short d;
+  type::list_int e;
+  type::list_long f;
+  type::list_real g;
+  type::list_float h;
+  type::list_char i;
+  type::list_symbol j;
+  type::nested_list n;
 
-        static inline bool decode(K x, C<KeyType, ValType, Hash, Equal, Alloc> &result) noexcept {
-            if (xt != tag) {
-                return false;
-            }
+  switch (xt) {
+  CS(0,
+     if (contains_lists(x)) {
+       custom_type_impl<type::nested_list>::decode(x, n);
+       return n;
+     } else {
+       custom_type_impl<type::list_mixed>::decode(x, a);
+       return a;
+     })
+  CS(custom_type_impl<type::atom_byte>::tag, custom_type_impl<type::list_byte>::decode(x, b); return b;)
+  CS(custom_type_impl<type::atom_bool>::tag, custom_type_impl<type::list_bool>::decode(x, c); return c;)
+  CS(custom_type_impl<type::atom_short>::tag, custom_type_impl<type::list_short>::decode(x, d); return d;)
+  CS(custom_type_impl<type::atom_int>::tag, custom_type_impl<type::list_int>::decode(x, e); return e;)
+  CS(custom_type_impl<type::atom_long>::tag, custom_type_impl<type::list_long>::decode(x, f); return f;)
+  CS(custom_type_impl<type::atom_real>::tag, custom_type_impl<type::list_real>::decode(x, g); return g;)
+  CS(custom_type_impl<type::atom_float>::tag, custom_type_impl<type::list_float>::decode(x, h); return h;)
+  CS(custom_type_impl<type::atom_char>::tag, custom_type_impl<type::list_char>::decode(x, i); return i;)
+  CS(custom_type_impl<type::atom_symbol>::tag, custom_type_impl<type::list_symbol>::decode(x, j); return j;)
+  default:return kdb::type::list_mixed{};
+  }
+}
 
-            K keys = xx;
-            K values = xy;
+// TODO :: implement custom_type_impl<list_any> so that this example will compile
+template<>
+struct custom_type_impl<kdb::type::any_list> {
+  static const int tag = 0;
 
-            if ((keys->t != custom_type_impl<KeyType>::tag) or (values->t != custom_type_impl<ValType>::tag)) {
-                return false;
-            }
+  static inline K encode(const kdb::type::any_list &x) noexcept {
+    return any_list_encoder(x);
+  }
 
-            std::vector<KeyType> native_keys;
-            custom_type_impl<std::vector<KeyType>>::decode(keys, native_keys);
+  static inline void set_list(K obj, int idx, const type::any_list &x) {
+    kK(obj)[idx] = encode(x);
+  }
 
-            std::vector<ValType> native_values;
-            custom_type_impl<std::vector<ValType>>::decode(values, native_values);
+  static inline type::any_list get_list(K obj, int idx) {
+    type::any_list res;
+    decode(kK(obj)[idx], res);
+    return res;
+  }
 
-            C<KeyType, ValType, Hash, Equal, Alloc> temp{};
+  static inline bool decode(K x, type::any_list &result) noexcept {
+    if ((xt < 0) or (xt > 20))
+      return false;
+    result = any_list_decoder(x);
+    return true;
+  }
+};
 
-            for (int i = 0; i < native_keys.size(); ++i)
-                temp[native_keys[i]] = native_values[i];
+// Handles the c++ standard map data types
+template<
+    template<typename, typename, typename, typename, typename> class C, typename KeyType, typename ValType, typename Hash, typename Equal, typename Alloc>
+struct custom_type_impl<C<KeyType, ValType, Hash, Equal, Alloc>> {
+  static const int tag = XD;
 
-            result = std::move(temp);
-            return true;
-        }
-    };
+  static inline void set_list(K obj, int idx, const C<KeyType, ValType, Hash, Equal, Alloc> &x) {
+    kK(obj)[idx] = custom_type_impl<C<KeyType, ValType, Hash, Equal, Alloc>>::encode(x);
+  }
 
-    namespace convert {
-        template<size_t N>
-        void to_byte_buffer(K obj, const std::array<char, N> &target) {
-            K buffer = b9(3, obj);
+  static inline C<KeyType, ValType, Hash, Equal, Alloc> get_list(K obj, int idx) {
+    C<KeyType, ValType, Hash, Equal, Alloc> res;
+    custom_type_impl<C<KeyType, ValType, Hash, Equal, Alloc>>::decode(kK(obj)[idx], res);
+    return std::move(res);
+  }
 
-            if ((sizeof(buffer->n) + buffer->n) > N) {
-                throw std::runtime_error("buffer to small to write to");
-            }
+  static inline K encode(const C<KeyType, ValType, Hash, Equal, Alloc> &x) noexcept {
+    size_t size = x.size();
+    K keys = ktn(custom_type_impl<KeyType>::tag, size);
+    K values = ktn(custom_type_impl<ValType>::tag, size);
 
-            std::memcpy((void *) target.data(), &buffer->n, sizeof(buffer->n));
-            std::memcpy((void *) (target.data() + sizeof(buffer->n)), kG(buffer), buffer->n);
-        }
+    int i = 0;
+    for (const auto &pair : x) {
+      custom_type_impl<KeyType>::set_list(keys, i, pair.first);
+      custom_type_impl<ValType>::set_list(values, i, pair.second);
+      i++;
+    }
 
-        template<typename T, size_t N>
-        void to_byte_buffer(const T &data, const std::array<char, N> &target) {
-            K obj = custom_type_impl<T>::encode(data);
-            to_byte_buffer(obj, target);
-        }
+    return xD(keys, values);
+  }
 
-        template<size_t N>
-        void from_byte_buffer(const std::array<char, N> &target, K &obj) {
-            J size = *((J *) target.data());
-            K bytes = ktn(KG, size);
-            std::memmove(kG(bytes), target.data() + sizeof(J), size);
+  static inline bool decode(K x, C<KeyType, ValType, Hash, Equal, Alloc> &result) noexcept {
+    if (xt != tag) {
+      return false;
+    }
 
-            if (!okx(bytes)) {
-                throw std::runtime_error("invalid bytes for deserializing");
-            }
+    K keys = xx;
+    K values = xy;
 
-            K temp = d9(bytes);
-            r0(bytes);
-            obj = temp;
-        }
+    if ((keys->t != custom_type_impl<KeyType>::tag) or (values->t != custom_type_impl<ValType>::tag)) {
+      return false;
+    }
 
-        template<typename T, size_t N>
-        void from_byte_buffer(const std::array<char, N> &target, T &data) {
-            K temp;
-            from_byte_buffer(target, temp);
-            if (!custom_type_impl<T>::decode(temp, data)) {
-                throw kdb::exception::invalid_conversion("couldn't convert to native type");
-            }
-        }
+    std::vector<KeyType> native_keys;
+    custom_type_impl<std::vector<KeyType>>::decode(keys, native_keys);
 
-        template<typename T>
-        void to_native(K obj, T &result) {
-            if (!custom_type_impl<T>::decode(obj, result))
-                throw kdb::exception::invalid_conversion("invalid conversion");
-        }
+    std::vector<ValType> native_values;
+    custom_type_impl<std::vector<ValType>>::decode(values, native_values);
 
-        template<typename T>
-        void to_native_or_die(K obj, T &result) {
-            if (!custom_type_impl<T>::decode(obj, result))
-                std::abort();
-        }
+    C<KeyType, ValType, Hash, Equal, Alloc> temp{};
 
-        template<typename T>
-        inline bool to_native_unsafe(K obj, T &result) noexcept {
-            return custom_type_impl<T>::decode(obj, result);
-        }
+    for (std::size_t i = 0; i < native_keys.size(); ++i)
+      temp[native_keys[i]] = native_values[i];
 
-        template<typename T>
-        inline T to_native_unsafe(K obj) noexcept {
-            T result;
-            custom_type_impl<T>::decode(obj, result);
-            return std::move(result);
-        }
+    result = std::move(temp);
+    return true;
+  }
+};
 
-        template<typename T>
-        inline K from_native(const T &data) noexcept {
-            return custom_type_impl<T>::encode(data);
-        }
-    }// namespace convert
+namespace convert {
+template<size_t N>
+void to_byte_buffer(K obj, const std::array<char, N> &target) {
+  K buffer = b9(3, obj);
 
-    namespace impl {// anonymous namespace - no outside access
+  if ((sizeof(buffer->n) + buffer->n) > N) {
+    throw std::runtime_error("buffer to small to write to");
+  }
 
-        template<typename T, typename M,
-                 typename std::enable_if<std::is_member_function_pointer<M>::value, M>::type * = nullptr>
-        inline void pack(K &x, const T &t, int index, M m) { kK(x)[index] = kdb::convert::from_native((t.*m)()); }
+  std::memcpy((void *) target.data(), &buffer->n, sizeof(buffer->n));
+  std::memcpy((void *) (target.data() + sizeof(buffer->n)), kG(buffer), buffer->n);
+}
 
-        template<typename T, typename M, typename... Ms,
-                 typename std::enable_if<std::is_member_function_pointer<M>::value, M>::type * = nullptr>
-        inline void pack(K &x, const T &t, int index, M m, Ms... ms) {
-            kK(x)[index] = kdb::convert::from_native((t.*m)());
-            pack(x, t, index + 1, ms...);
-        }
+template<typename T, size_t N>
+void to_byte_buffer(const T &data, const std::array<char, N> &target) {
+  K obj = custom_type_impl<T>::encode(data);
+  to_byte_buffer(obj, target);
+}
 
-        template<typename T, typename M,
-                 typename std::enable_if<std::is_member_object_pointer<M>::value, M>::type * = nullptr>
-        inline void pack(K &x, const T &t, int index, M m) { kK(x)[index] = kdb::convert::from_native(t.*m); }
+template<size_t N>
+void from_byte_buffer(const std::array<char, N> &target, K &obj) {
+  J size = *((J *) target.data());
+  K bytes = ktn(KG, size);
+  std::memmove(kG(bytes), target.data() + sizeof(J), size);
 
-        template<typename T, typename M, typename... Ms,
-                 typename std::enable_if<std::is_member_object_pointer<M>::value, M>::type * = nullptr>
-        inline void pack(K &x, const T &t, int index, M m, Ms... ms) {
-            kK(x)[index] = kdb::convert::from_native(t.*m);
-            pack(x, t, index + 1, ms...);
-        }
+  if (!okx(bytes)) {
+    throw std::runtime_error("invalid bytes for deserializing");
+  }
 
-        template<typename T, typename... Ms>
-        inline K pack(const T &t, Ms... ms) {
-            K list = ktn(0, sizeof...(ms));
-            pack(list, t, 0, ms...);
-            return list;
-        }
+  K temp = d9(bytes);
+  r0(bytes);
+  obj = temp;
+}
 
-        template<typename Type, typename MemFn,
-                 typename std::enable_if<std::is_member_function_pointer<MemFn>::value, MemFn>::type * = nullptr>
-        void unpack_object(K &obj, Type &instance, int index, MemFn memFn) {
-            static_assert(true, "can't unpack objects that are not POD - please override type<ClassName>");
-        }
+template<typename T, size_t N>
+void from_byte_buffer(const std::array<char, N> &target, T &data) {
+  K temp;
+  from_byte_buffer(target, temp);
+  if (!custom_type_impl<T>::decode(temp, data)) {
+    throw kdb::exception::invalid_conversion("couldn't convert to native type");
+  }
+}
 
-        template<typename Type, typename MemFn, typename... MemFns,
-                 typename std::enable_if<std::is_member_function_pointer<MemFn>::value, MemFn>::type * = nullptr>
-        void unpack(K &obj, Type &instance, int index, MemFn memFn, MemFns... args) {
-            static_assert(true, "can't unpack objects that are not POD - please override type<ClassName>");
-        }
+template<typename T>
+void to_native(K obj, T &result) {
+  if (!custom_type_impl<T>::decode(obj, result))
+    throw kdb::exception::invalid_conversion("invalid conversion");
+}
 
-        template<typename Type, typename MemFn,
-                 typename std::enable_if<std::is_member_object_pointer<MemFn>::value, MemFn>::type * = nullptr>
-        void unpack(K &obj, Type &instance, int index, MemFn memFn) {
-            kdb::convert::to_native(kK(obj)[index], instance.*memFn);
-        }
+template<typename T>
+void to_native_or_die(K obj, T &result) {
+  if (!custom_type_impl<T>::decode(obj, result))
+    std::abort();
+}
 
-        template<typename T, typename M, typename... Ms,
-                 typename std::enable_if<std::is_member_object_pointer<M>::value, M>::type * = nullptr>
-        void unpack(K &obj, T &t, int i, M m, Ms... ms) {
-            kdb::convert::to_native(kK(obj)[i], t.*m);
-            unpack(obj, t, i + 1, ms...);
-        }
+template<typename T>
+inline bool to_native_unsafe(K obj, T &result) noexcept {
+  return custom_type_impl<T>::decode(obj, result);
+}
 
-        /**
-         * Requirements for being able to unpack a data structure:
-         * - The type to be unpacked has to be default constructable (have a public constructor with no args)
-         * - The type (and all dependant types) need to be supported via kdb::convert::to_native.
-         */
-        template<typename T, typename... Ms>
-        T unpack(K &x, Ms... ms) {
-            T res{};
-            unpack(x, res, 0, ms...);
-            return res;
-        }
-    }// namespace impl
+template<typename T>
+inline T to_native_unsafe(K obj) noexcept {
+  T result;
+  custom_type_impl<T>::decode(obj, result);
+  return std::move(result);
+}
+
+template<typename T>
+inline K from_native(const T &data) noexcept {
+  return custom_type_impl<T>::encode(data);
+}
+}// namespace convert
+
+namespace impl {// anonymous namespace - no outside access
+
+template<typename T, typename M,
+    typename std::enable_if<std::is_member_object_pointer<M>::value, M>::type * = nullptr>
+inline void pack(K &x, const T &t, int index, M m) { kK(x)[index] = kdb::convert::from_native(t.*m); }
+
+template<typename T, typename M, typename... Ms,
+    typename std::enable_if<std::is_member_object_pointer<M>::value, M>::type * = nullptr>
+inline void pack(K &x, const T &t, int index, M m, Ms... ms) {
+  kK(x)[index] = kdb::convert::from_native(t.*m);
+  pack(x, t, index + 1, ms...);
+}
+
+template<typename T, typename... Ms>
+inline K pack(const T &t, Ms... ms) {
+  K list = ktn(0, sizeof...(ms));
+  pack(list, t, 0, ms...);
+  return list;
+}
+
+template<typename T, typename M, typename... Ms,
+    typename std::enable_if<std::is_member_object_pointer<M>::value, M>::type * = nullptr>
+inline void pack_dict(K &x, const T &t, int index, const char *n, M m) { n = "test"; kK(x)[index] = kdb::convert::from_native(t.*m); }
+
+template<typename T, typename M, typename... Ms,
+    typename std::enable_if<std::is_member_object_pointer<M>::value, M>::type * = nullptr>
+inline void pack_dict(K &x, const T &t, int index, const char *n, M m, Ms... ms) {
+  n = "test";
+  kK(x)[index] = kdb::convert::from_native(t.*m);
+  pack_dict(x, t, index + 1, ms...);
+}
+
+template<typename T, typename... Ms>
+inline K pack_dict(const T &t, Ms... ms) {
+  K list = ktn(0, sizeof...(ms));
+  pack_dict(list, t, 0, ms...);
+  return list;
+}
+
+template<typename T, typename M,
+    typename std::enable_if<std::is_member_object_pointer<M>::value, M>::type * = nullptr>
+void unpack(K &x, T &t, int i, M m) {
+  kdb::convert::to_native(kK(x)[i], t.*m);
+}
+
+template<typename T, typename M, typename... Ms,
+    typename std::enable_if<std::is_member_object_pointer<M>::value, M>::type * = nullptr>
+void unpack(K &obj, T &t, int i, M m, Ms... ms) {
+  kdb::convert::to_native(kK(obj)[i], t.*m);
+  unpack(obj, t, i + 1, ms...);
+}
+
+/**
+ * Requirements for being able to unpack a data structure:
+ * - The type to be unpacked has to be default constructable (have a public constructor with no args)
+ * - The type (and all dependant types) need to be supported via kdb::convert::to_native.
+ */
+template<typename T, typename... Ms>
+T unpack(K &x, Ms... ms) {
+  T res{};
+  unpack(x, res, 0, ms...);
+  return res;
+}
+}// namespace impl
 }// namespace kdb
 
 #define KDB_REGISTER_TYPE(TypeName, ...)                                                                              \
@@ -495,7 +489,19 @@ namespace kdb {
             static inline K encode(const TypeName &x) noexcept { return std::move(kdb::impl::pack(x, __VA_ARGS__)); } \
             static inline bool decode(K x, TypeName &result) noexcept {                                               \
                 if (xt != tag) return false;                                                                          \
-                result = std::move(kdb::impl::unpack<TypeName>(x, __VA_ARGS__));                                      \
+                result = kdb::impl::unpack<TypeName>(x, __VA_ARGS__);                                                 \
+                return true;                                                                                          \
+            }                                                                                                         \
+        };                                                                                                            \
+    }
+
+#define KDB_REGISTER_DICT_TYPE(TypeName, ...)                                                                         \
+    namespace kdb {                                                                                                   \
+        template<>                                                                                                    \
+        struct custom_type_impl<TypeName> {                                                                           \
+            static const int tag = 0;                                                                                 \
+            static inline K encode(const TypeName &x) noexcept { return std::move(kdb::impl::pack_dict(x, __VA_ARGS__)); } \
+            static inline bool decode(K x, TypeName &result) noexcept {                                               \
                 return true;                                                                                          \
             }                                                                                                         \
         };                                                                                                            \

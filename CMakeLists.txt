@@ -3,34 +3,16 @@ project(Example)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -march=native")
 
-include(FetchContent)
+find_package(doctest CONFIG REQUIRED)
+find_package(spdlog CONFIG REQUIRED)
+find_package(GTest CONFIG REQUIRED)
+find_package(benchmark CONFIG REQUIRED)
 
 # ------------------------------------------------------------------------------------- #
 # Dependencies                                                                          #
 # ------------------------------------------------------------------------------------- #
-
-FetchContent_Declare(
-        doctest
-        GIT_REPOSITORY https://github.com/onqtam/doctest.git
-        GIT_TAG        2.4.1
-)
-FetchContent_MakeAvailable(doctest)
-
-FetchContent_Declare(
-        googletest
-        GIT_REPOSITORY https://github.com/google/googletest.git
-        GIT_TAG         master
-)
-FetchContent_MakeAvailable(googletest)
-
-FetchContent_Declare(
-        benchmark
-        GIT_REPOSITORY https://github.com/google/benchmark.git
-        GIT_TAG        master
-)
-FetchContent_MakeAvailable(benchmark)
 
 include_directories(
         "${CMAKE_SOURCE_DIR}/thirdparty"
@@ -45,7 +27,8 @@ add_executable(benchmarking
         "${CMAKE_SOURCE_DIR}/c.o")
 
 target_link_libraries(benchmarking
-        benchmark
+        "benchmark::benchmark"
+        "spdlog::spdlog"
         pthread)
 
 # ------------------------------------------------------------------------------------- #
@@ -66,4 +49,6 @@ target_include_directories(test-runner
         "${CMAKE_SOURCE_DIR}/include")
 
 target_link_libraries(test-runner
+        "doctest::doctest"
+        "spdlog::spdlog"
         "pthread")

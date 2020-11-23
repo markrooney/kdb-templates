@@ -2,6 +2,8 @@
 #include <kx/k.h>
 #include <markrooney/kdb.hpp>
 
+#include "spdlog/spdlog.h"
+
 // Need to undefine R as it causes issues with the doctest templates
 #undef R
 
@@ -49,6 +51,8 @@ TEST_CASE("K objects can be decoded into custom objects if the structure matches
         K obj = ktn(0, 2);
         kK(obj)[0] = kf(2000);
         kK(obj)[1] = ks((S) "upd");
+
+        spdlog::info("running the test...");
 
         ConfigurationAny config;
         CHECK_NOTHROW(convert::to_native(obj, config));
