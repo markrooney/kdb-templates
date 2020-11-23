@@ -4,16 +4,9 @@
 #define KXVER 3
 #include <kx/k.h>
 
-#undef U
-#undef P
-#undef R
-
 #include <markrooney/kdb.hpp>
 
-#include <arrow/api.h>
 
-
-/*
 static void BM_CreatingAndReleasingKObjects(benchmark::State &state) {
   khp((S) "", -1);
   int data = 42;
@@ -201,7 +194,6 @@ static void BM_CreatingListFromAnyListTypes(benchmark::State &state) {
   }
 }
 BENCHMARK(BM_CreatingListFromAnyListTypes)->Range(8, 8 << 12);
-*/
 
 struct wrapper {
   kdb::type::atom_float one;
@@ -236,8 +228,6 @@ struct mapping {
 
 static void BM_CreatingDictWithoutTemplate(benchmark::State &state) {
   khp((S) "", -1);
-
-  arrow::Result<std::unique_ptr<arrow::Buffer>> maybe_buffer = arrow::AllocateBuffer(4096);
 
   mapping map = {
     .quantity = 100,
