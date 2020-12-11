@@ -6,7 +6,7 @@
   "dependencies": [
     "spdlog",
     "doctest",
-    "Gtest",
+    "gtest",
     "benchmark"
   ]
 }

@@ -1,4 +1,8 @@
 cmake_minimum_required(VERSION 3.14)
+
+set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake
+        CACHE STRING "Vcpkg toolchain file")
+
 project(Example)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -24,7 +28,7 @@ include_directories(
 
 add_executable(benchmarking
         "${CMAKE_SOURCE_DIR}/benchmarks/bench_atom_conversion.cpp"
-        "${CMAKE_SOURCE_DIR}/c.o")
+        "${CMAKE_SOURCE_DIR}/thirdparty/kx/l64/c.o")
 
 target_link_libraries(benchmarking
         "benchmark::benchmark"
@@ -41,7 +45,7 @@ add_executable(test-runner
         "${CMAKE_SOURCE_DIR}/tests/test_list_conversion.cpp"
         "${CMAKE_SOURCE_DIR}/tests/test_nested_conversion.cpp"
         "${CMAKE_SOURCE_DIR}/tests/test_custom_types.cpp"
-        "${CMAKE_SOURCE_DIR}/c.o")
+        "${CMAKE_SOURCE_DIR}/thirdparty/kx/l64/c.o")
 
 target_include_directories(test-runner
         PRIVATE
