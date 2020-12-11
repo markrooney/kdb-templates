@@ -1,0 +1,12 @@
+{
+  "name": "kdb-templates",
+  "version-string": "0.0.1",
+  "homepage": "https://github.com/markrooney/kdb-templates",
+  "description": "A template library for converting to/from native C++ types to KDB without any knowledge of the underlying KDB apis",
+  "dependencies": [
+    "spdlog",
+    "doctest",
+    "Gtest",
+    "benchmark"
+  ]
+}
