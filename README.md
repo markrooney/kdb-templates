@@ -39,5 +39,3 @@ cmake --build build
 # run the tests
 ./build/test-runner
 ```
-
-

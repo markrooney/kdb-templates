@@ -90,7 +90,7 @@ namespace kdb {
         constexpr static auto encode(const C<T, A> &x) noexcept {
             auto res = ktn(custom_type_impl<T>::tag, x.size());
             // Changing the variable here from size_t -> int makes a performance difference!. The int version is inlined with SSE instructions.
-            for (auto i = 0; i < x.size(); i++)
+            for (auto i = 0; i < static_cast<long int>(x.size()); i++)
                 custom_type_impl<T>::set_list(res, i, x[i]);
             return res;
         }

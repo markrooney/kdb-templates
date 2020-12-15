@@ -6,6 +6,9 @@
 
 #include <markrooney/kdb.hpp>
 
+using namespace kdb::convert;
+using namespace kdb::type;
+
 static void CreatingAtomMANUAL(benchmark::State &state) {
   khp((S) "", -1);
   int data = 42;
@@ -13,6 +16,7 @@ static void CreatingAtomMANUAL(benchmark::State &state) {
   while (state.KeepRunning()) {
     K obj = ki(data);
     r0(obj);
+    benchmark::DoNotOptimize(obj);
   }
 }
 BENCHMARK(CreatingAtomMANUAL);
@@ -22,19 +26,21 @@ static void CreatingAtomTEMPLATE(benchmark::State &state) {
   int data = 42;
 
   while (state.KeepRunning()) {
-    K obj = kdb::convert::from_native(data);
+    K obj = from_native(data);
     r0(obj);
+    benchmark::DoNotOptimize(obj);
   }
 }
 BENCHMARK(CreatingAtomTEMPLATE);
 
 static void CreatingAtomVARIANTTEMPLATE(benchmark::State &state) {
   khp((S) "", -1);
-  kdb::type::atom_any data = 42;
+  atom_any data = 42;
 
   while (state.KeepRunning()) {
-    K obj = kdb::convert::from_native(data);
+    K obj = from_native(data);
     r0(obj);
+    benchmark::DoNotOptimize(obj);
   }
 }
 BENCHMARK(CreatingAtomVARIANTTEMPLATE);
@@ -54,7 +60,7 @@ static void CreatingListFromVectorMANUAL(benchmark::State &state) {
           kI(list)[i] = data[i];
       }
       r0(list);
-    ::benchmark::DoNotOptimize(list);
+      benchmark::DoNotOptimize(list);
   }
 }
 BENCHMARK(CreatingListFromVectorMANUAL)->Range(8, 8 << 16);
@@ -68,16 +74,16 @@ static void CreatingListFromVectorTEMPLATE(benchmark::State &state) {
   }
 
   for (auto _ : state) {
-    K list = kdb::convert::from_native(data);
+    K list = from_native(data);
     r0(list);
-    ::benchmark::DoNotOptimize(list);
+    benchmark::DoNotOptimize(list);
   }
 }
 BENCHMARK(CreatingListFromVectorTEMPLATE)->Range(8, 8 << 16);
 
 struct wrapper {
-  kdb::type::atom_float one;
-  kdb::type::atom_long two;
+  atom_float one;
+  atom_long two;
 };
 
 KDB_REGISTER_TYPE(wrapper,
@@ -85,8 +91,8 @@ KDB_REGISTER_TYPE(wrapper,
                   &wrapper::two)
 
 struct instr {
-  kdb::type::atom_float price;
-  kdb::type::atom_long quantity;
+  atom_float price;
+  atom_long quantity;
   wrapper data;
 };
 
@@ -118,7 +124,7 @@ BENCHMARK(CreatingStructMANUAL);
 static void CreatingStructTEMPLATE(benchmark::State &state) {
   khp((S) "", -1);
 
-  instr data = { .price = 23.7, .quantity = 15768, .data = { .one = 42.6134, .two = 2747 } };
+  auto data = instr{.price = 23.7, .quantity = 15768, .data = { .one = 42.6134, .two = 2747 }};
 
   for (auto _ : state) {
     K list = kdb::convert::from_native(data);
