@@ -6,7 +6,7 @@
 
 #include <markrooney/kdb.hpp>
 
-
+/*
 static void BM_CreatingAndReleasingKObjects(benchmark::State &state) {
   khp((S) "", -1);
   int data = 42;
@@ -129,6 +129,8 @@ static void BM_CreatingListFromVectorPreAlloc(benchmark::State &state) {
 }
 BENCHMARK(BM_CreatingListFromVectorPreAlloc)->Range(8, 8 << 12);
 
+*/
+
 static void BM_CreatingListFromVectorMemCpy(benchmark::State &state) {
   khp((S) "", -1);
 
@@ -138,13 +140,16 @@ static void BM_CreatingListFromVectorMemCpy(benchmark::State &state) {
   }
 
   for (auto _ : state) {
-    int n = data.size();
-    K list = ktn(KI, n);
-    std::memcpy(kI(list), data.data(), sizeof(int) * n);
-    r0(list);
+      int n = data.size();
+      K list = ktn(KI, n);
+      for (int i = 0; i < n; i++) {
+          kI(list)[i] = data[i];
+      }
+      r0(list);
+    ::benchmark::DoNotOptimize(list);
   }
 }
-BENCHMARK(BM_CreatingListFromVectorMemCpy)->Range(8, 8 << 12);
+BENCHMARK(BM_CreatingListFromVectorMemCpy)->Range(8, 8 << 16);
 
 static void BM_CreatingListFromVectorTemplate(benchmark::State &state) {
   khp((S) "", -1);
@@ -155,12 +160,15 @@ static void BM_CreatingListFromVectorTemplate(benchmark::State &state) {
   }
 
   for (auto _ : state) {
-    K list = kdb::convert::from_native(data);
+      K list = kdb::custom_type_impl<std::vector<int>>::encode(data);
+   //  K list = kdb::convert::from_native(data);
     r0(list);
+    ::benchmark::DoNotOptimize(list);
   }
 }
-BENCHMARK(BM_CreatingListFromVectorTemplate)->Range(8, 8 << 12);
+BENCHMARK(BM_CreatingListFromVectorTemplate)->Range(8, 8 << 16);
 
+/*
 static void BM_CreatingListFromListTypes(benchmark::State &state) {
   khp((S) "", -1);
 
@@ -300,5 +308,6 @@ static void BM_CreatingStructTemplate(benchmark::State &state) {
 }
 BENCHMARK(BM_CreatingStructTemplate);
 
+*/
 
 BENCHMARK_MAIN();
