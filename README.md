@@ -115,24 +115,36 @@ auto result = to_native<dict<atom_symbol, list_float>>(weather_table)
 // The macro takes a list of fields to include in the conversion. Any fields you
 // don't place in the macro will be skipped and will remain uninitialized after
 // a call to to_native.
-struct MyData {
+struct User {
+    int id;
+    std::string name;
+};
+KDB_REGISTER(User, id, name)
+
+struct SessionStatus {
     float timeout;
     int sessionId;
     std::string sessionName;
+    std::vector<User> users;
 };
-KDB_REGISTER(MyData, timeout, sessionId, sessionName)
+KDB_REGISTER(SessionStatus, timeout, sessionId, sessionName, users)
 
 // after registration, conversion of these types is as simple as calling from_native
-MyData data = { 3050.0, 100, "example session name" };
-K r = from_native(data);
+MyData session = { 3050.0, 100, "example session name", {}};
+K kobj = from_native(session);
 
 // the new type is also handled automatically within containers
-std::vector<MyData> data_list = {
-        { 3050.0, 100, "example session name"},
-        { 1000.0, 85,  "another session name"},
-        { 8472.0, 10,  "more session names"}
+std::vector<SessionStatus> data_list = {
+        { 3050.0, 100, "example session name", {{"Alice", 1}, {"Bob", 2}}},
+        { 1000.0, 85,  "another session name", {{"Peter", 7}}},
+        { 8472.0, 10,  "more session names", {{"Sarah", 3}}}
 };
-K y = from_native(data_list);
+K kobj = from_native(data_list);
+
+// these complex custom types can be converted back into C++ types with full
+// typechecking of the datastructure.
+std::vector<SessionStatus> result;
+to_native(kobj, result);
 ```
 
 ## Building
