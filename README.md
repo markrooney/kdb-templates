@@ -19,7 +19,7 @@ cd kdb-templates
 2. Bootstrap and initialize vcpkg for your system.
 ```bash
 # initialize vcpkg on your system by running the bootstrap script
-./vcpkg/bootstrap-vcpkg.sh
+./thirdparty/vcpkg/bootstrap-vcpkg.sh
 ```
 
 3. Run cmake to build the executables.
