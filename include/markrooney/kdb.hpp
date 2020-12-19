@@ -1,5 +1,3 @@
-#pragma once
-
 #ifndef _MARKROONEY_KDB_H
 #define _MARKROONEY_KDB_H
 
@@ -18,6 +16,7 @@
 #include <vector> // for std::vector
 
 #include "detail/exceptions.hpp"
+#include "detail/macro_expansion.hpp"
 #include "detail/types.hpp"
 
 /*!
@@ -383,10 +382,18 @@ namespace kdb {
         }
 
         template<typename T>
+        inline T to_native(K obj) {
+            T result;
+            if (!custom_type_impl<T>::decode(obj, result))
+                throw kdb::exception::invalid_conversion("invalid conversion");
+            return result;
+        }
+
+        template<typename T>
         inline T to_native_unsafe(K obj) noexcept {
             T result;
             custom_type_impl<T>::decode(obj, result);
-            return std::move(result);
+            return result;
         }
 
         template<typename T>
@@ -464,18 +471,34 @@ namespace kdb {
     }// namespace impl
 }// namespace kdb
 
-#define KDB_REGISTER_TYPE(TypeName, ...)                                                                              \
+#define KDB_REGISTER_FIELDS(TypeName, ...)                                                                            \
     namespace kdb {                                                                                                   \
         template<>                                                                                                    \
         struct custom_type_impl<TypeName> {                                                                           \
             static const int tag = 0;                                                                                 \
             static inline K encode(const TypeName &x) noexcept { return std::move(kdb::impl::pack(x, __VA_ARGS__)); } \
             static inline bool decode(K x, TypeName &result) noexcept {                                               \
-                if (x->t != tag) return false;                                                                          \
+                if (x->t != tag) return false;                                                                        \
                 result = kdb::impl::unpack<TypeName>(x, __VA_ARGS__);                                                 \
                 return true;                                                                                          \
             }                                                                                                         \
         };                                                                                                            \
+    }
+
+#define TYPE_MEMBER_FN(Type, Member) &Type::Member
+
+#define KDB_REGISTER(TypeName, ...)                                                                                                                              \
+    namespace kdb {                                                                                                                                              \
+        template<>                                                                                                                                               \
+        struct custom_type_impl<TypeName> {                                                                                                                      \
+            static const int tag = 0;                                                                                                                            \
+            static inline K encode(const TypeName &x) noexcept { return std::move(kdb::impl::pack(x, PASTE_EXPAND(PASTE_MACRO(TYPE_MEMBER_FN, TypeName, __VA_ARGS__)))); } \
+            static inline bool decode(K x, TypeName &result) noexcept {                                                                                          \
+                if (x->t != tag) return false;                                                                                                                   \
+                result = kdb::impl::unpack<TypeName>(x, PASTE_EXPAND(PASTE_MACRO(TYPE_MEMBER_FN, TypeName, __VA_ARGS__)));                                                \
+                return true;                                                                                                                                     \
+            }                                                                                                                                                    \
+        };                                                                                                                                                       \
     }
 
 #define KDB_REGISTER_DICT_TYPE(TypeName, ...)                                                                              \
@@ -491,7 +514,7 @@ namespace kdb {
     }
 
 // remove any Kx macros that will cause problems for people using C++ templates. These macros can be enabled by defining
-// USE_KX_MACROS before loading the header file.
+// USE_KX_MACROS before loading this header file.
 #include "detail/remove_macros.hpp"
 
 #endif

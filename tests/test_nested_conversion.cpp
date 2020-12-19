@@ -1,5 +1,5 @@
 #define KXVER 3
-#include <kx/k.h>
+#include "k.h"
 #include <markrooney/kdb.hpp>
 
 using namespace kdb;
@@ -12,20 +12,13 @@ using L2OrderBookList = std::unordered_map<std::string, L2OrderBook>;
 
 struct InstrumentInfo {
     type::atom_symbol longSymbol;
-    type::atom_long lastUpdated;
+    type::atom_long lastUpdated{};
     L2OrderBookList orderBookList;
     type::list_float values;
-    type::atom_long timestamp;
+    type::atom_long timestamp{};
     type::atom_any other;
 };
-
-KDB_REGISTER_TYPE(InstrumentInfo,
-                  &InstrumentInfo::longSymbol,
-                  &InstrumentInfo::lastUpdated,
-                  &InstrumentInfo::orderBookList,
-                  &InstrumentInfo::values,
-                  &InstrumentInfo::timestamp,
-                  &InstrumentInfo::other)
+KDB_REGISTER(InstrumentInfo,longSymbol,lastUpdated,orderBookList,values,timestamp,other)
 
 TEST_CASE("roundtrip conversion with complex nested objects should result in equivalent objects") {
     khp((S) "", -1);

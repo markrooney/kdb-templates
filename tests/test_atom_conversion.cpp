@@ -1,5 +1,5 @@
 #define KXVER 3
-#include <kx/k.h>
+#include "k.h"
 #include <markrooney/kdb.hpp>
 
 using namespace kdb::convert;

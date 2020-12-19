@@ -2,7 +2,7 @@
 #include <benchmark/benchmark.h>
 
 #define KXVER 3
-#include <kx/k.h>
+#include "k.h"
 
 #include <markrooney/kdb.hpp>
 
@@ -65,6 +65,7 @@ static void CreatingListFromVectorTEMPLATE(benchmark::State &state) {
   khp((S) "", -1);
 
   std::vector<int> data;
+  data.reserve(state.range(0));
   for (int i = 0; i < state.range(0); i++) {
     data.push_back(i);
   }
@@ -82,9 +83,9 @@ struct wrapper {
   kdb::type::atom_long two;
 };
 
-KDB_REGISTER_TYPE(wrapper,
-                  &wrapper::one,
-                  &wrapper::two)
+KDB_REGISTER_FIELDS(wrapper,
+                    TYPE_MEMBER_FN(wrapper, one),
+                    TYPE_MEMBER_FN(wrapper, two))
 
 struct instr {
   kdb::type::atom_float price;
@@ -92,10 +93,10 @@ struct instr {
   wrapper data;
 };
 
-KDB_REGISTER_TYPE(instr,
-                  &instr::price,
-                  &instr::quantity,
-                  &instr::data)
+KDB_REGISTER_FIELDS(instr,
+                   &instr::price,
+                   &instr::quantity,
+                   &instr::data)
 
 static void CreatingStructMANUAL(benchmark::State &state) {
   khp((S) "", -1);

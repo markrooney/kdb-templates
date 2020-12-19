@@ -18,7 +18,7 @@ find_package(benchmark CONFIG REQUIRED)
 # ------------------------------------------------------------------------------------- #
 
 include_directories(
-        "${CMAKE_SOURCE_DIR}/thirdparty"
+        "${CMAKE_SOURCE_DIR}/thirdparty/kx/c/c"
         "${CMAKE_SOURCE_DIR}/include")
 
 # ------------------------------------------------------------------------------------- #
@@ -47,7 +47,7 @@ add_executable(test-runner
 
 target_include_directories(test-runner
         PRIVATE
-        "${CMAKE_SOURCE_DIR}/thirdparty"
+        "${CMAKE_SOURCE_DIR}/thirdparty/kx/c/c"
         "${CMAKE_SOURCE_DIR}/include")
 
 target_link_libraries(test-runner
