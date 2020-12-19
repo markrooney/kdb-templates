@@ -59,6 +59,8 @@ static void CreatingListFromVectorMANUAL(benchmark::State &state) {
 }
 BENCHMARK(CreatingListFromVectorMANUAL)->Range(8, 8 << 16);
 
+
+
 static void CreatingListFromVectorTEMPLATE(benchmark::State &state) {
   khp((S) "", -1);
 

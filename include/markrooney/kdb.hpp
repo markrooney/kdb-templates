@@ -473,7 +473,7 @@ namespace kdb {
             static const int tag = 0;                                                                                 \
             static inline K encode(const TypeName &x) noexcept { return std::move(kdb::impl::pack(x, __VA_ARGS__)); } \
             static inline bool decode(K x, TypeName &result) noexcept {                                               \
-                if (xt != tag) return false;                                                                          \
+                if (x->t != tag) return false;                                                                          \
                 result = kdb::impl::unpack<TypeName>(x, __VA_ARGS__);                                                 \
                 return true;                                                                                          \
             }                                                                                                         \
@@ -491,5 +491,9 @@ namespace kdb {
             }                                                                                                              \
         };                                                                                                                 \
     }
+
+// remove any Kx macros that will cause problems for people using C++ templates. These macros can be enabled by defining
+// USE_KX_MACROS before loading the header file.
+#include "detail/remove_macros.hpp"
 
 #endif

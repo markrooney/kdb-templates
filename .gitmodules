@@ -1,3 +1,7 @@
 [submodule "vcpkg"]
-	path = vcpkg
+	path = thirdparty/vcpkg
 	url = https://github.com/microsoft/vcpkg.git
+
+[submodule "vcpkg"]
+    path = thirdparty/kx
+    url = https://github.com/KxSystems/kdb.git
