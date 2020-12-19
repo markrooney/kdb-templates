@@ -114,6 +114,22 @@ namespace kdb {
                 custom_type_impl<T>::set_list(res, i, x[i]);
             return res;
         }
+
+        static inline bool decode(K x, C<T, N> &result) noexcept {
+            if (x->t != custom_type_impl<T>::tag) {
+                return false;
+            }
+
+            J size = x->n;
+            C<T, N> temp;
+            for (J i = 0; i < size; i++) {
+                temp[i] = custom_type_impl<T>::get_list(x, i);
+            }
+
+            result = std::move(temp);
+
+            return true;
+        }
     };
 
     // --------------------------------------------------------------------------------
@@ -487,18 +503,18 @@ namespace kdb {
 
 #define TYPE_MEMBER_FN(Type, Member) &Type::Member
 
-#define KDB_REGISTER(TypeName, ...)                                                                                                                              \
-    namespace kdb {                                                                                                                                              \
-        template<>                                                                                                                                               \
-        struct custom_type_impl<TypeName> {                                                                                                                      \
-            static const int tag = 0;                                                                                                                            \
+#define KDB_REGISTER(TypeName, ...)                                                                                                                                        \
+    namespace kdb {                                                                                                                                                        \
+        template<>                                                                                                                                                         \
+        struct custom_type_impl<TypeName> {                                                                                                                                \
+            static const int tag = 0;                                                                                                                                      \
             static inline K encode(const TypeName &x) noexcept { return std::move(kdb::impl::pack(x, PASTE_EXPAND(PASTE_MACRO(TYPE_MEMBER_FN, TypeName, __VA_ARGS__)))); } \
-            static inline bool decode(K x, TypeName &result) noexcept {                                                                                          \
-                if (x->t != tag) return false;                                                                                                                   \
-                result = kdb::impl::unpack<TypeName>(x, PASTE_EXPAND(PASTE_MACRO(TYPE_MEMBER_FN, TypeName, __VA_ARGS__)));                                                \
-                return true;                                                                                                                                     \
-            }                                                                                                                                                    \
-        };                                                                                                                                                       \
+            static inline bool decode(K x, TypeName &result) noexcept {                                                                                                    \
+                if (x->t != tag) return false;                                                                                                                             \
+                result = kdb::impl::unpack<TypeName>(x, PASTE_EXPAND(PASTE_MACRO(TYPE_MEMBER_FN, TypeName, __VA_ARGS__)));                                                 \
+                return true;                                                                                                                                               \
+            }                                                                                                                                                              \
+        };                                                                                                                                                                 \
     }
 
 #define KDB_REGISTER_DICT_TYPE(TypeName, ...)                                                                              \

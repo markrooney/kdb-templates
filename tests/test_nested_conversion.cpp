@@ -2,6 +2,8 @@
 #include "k.h"
 #include <markrooney/kdb.hpp>
 
+#include <chrono>
+
 using namespace kdb;
 
 #include <unordered_map>

@@ -43,6 +43,7 @@ add_executable(test-runner
         "${CMAKE_SOURCE_DIR}/tests/test_list_conversion.cpp"
         "${CMAKE_SOURCE_DIR}/tests/test_nested_conversion.cpp"
         "${CMAKE_SOURCE_DIR}/tests/test_custom_types.cpp"
+        "${CMAKE_SOURCE_DIR}/tests/test_stl_conversion.cpp"
         "${CMAKE_SOURCE_DIR}/thirdparty/kx/l64/c.o")
 
 target_include_directories(test-runner

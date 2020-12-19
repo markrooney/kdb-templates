@@ -207,6 +207,9 @@ namespace kdb::type {
     using list_char = list<atom_char>;
 
     /*!
+     * A type representing a list of KDB symbols
+     *
+     * @example represented in kdb as: `abc`def`hij`kdb
      * @since version 1.0.0
      */
     using list_symbol = list<atom_symbol>;
