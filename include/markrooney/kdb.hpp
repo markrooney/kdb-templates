@@ -20,8 +20,6 @@
 #include "detail/exceptions.hpp"
 #include "detail/types.hpp"
 
-using std::size_t;
-
 /*!
 @brief namespace for the KDB type conversion library
 @since version 1.0.0

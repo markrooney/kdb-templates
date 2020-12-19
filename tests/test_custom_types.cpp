@@ -2,9 +2,6 @@
 #include <kx/k.h>
 #include <markrooney/kdb.hpp>
 
-// Need to undefine R as it causes issues with the doctest templates
-#undef R
-
 using namespace kdb;
 
 #include <unordered_map>

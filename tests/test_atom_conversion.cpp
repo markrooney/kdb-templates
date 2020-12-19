@@ -1,9 +1,6 @@
 #define KXVER 3
-#include "kx/k.h"
-#include "markrooney/kdb.hpp"
-
-// Need to undefine R as it causes issues with the doctest templates
-#undef R
+#include <kx/k.h>
+#include <markrooney/kdb.hpp>
 
 using namespace kdb::convert;
 using namespace kdb::type;
