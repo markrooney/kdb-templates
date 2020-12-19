@@ -26,37 +26,31 @@ compatiblility with these features at [cppreference.com](https://en.cppreference
 
 ## Examples
 
+### Basic Types
+
 ```c++
+// just include the kdb.hpp header to pull in all of the functionality
 #include <markrooney/kdb.hpp>
 
-using kdb::convert;
+// the types live under the kdb::type namespace 
 using kdb::type;
 
-// conversions between C++ and K types are supported via the to_native and from_native
-// functions.
-int x = 200;
-
-// from_native will pick the appropriate K type automatically at compile time
-// to avoid any overhead.
-K kobj = from_native(x);
-
-// to_native will attempt to convert the kobject to the native type and will
-// throw an exception if it's not the correct type.
-auto y = to_native<int>(kobj); 
-
-// to_native can also infer the type and possibly avoid a copy/default construction
-// if you already have a variable to put the result in.
-int z;
-to_native(kobj, z);
-
 // some convenient type aliases are defined since the macros have been removed by the library
-atom_bool  z = true;
-atom_real  x = 174.26;      // 4 byte floating point as defined via the E macro.
-atom_float y = 827784.123;  // 8 byte floating point as defined via the F macro.
+atom_bool  z = true;        // 1 byte boolean        (kdb: b)
+atom_char  c = 'e';         // 1 byte character      (kdb: c) 
+atom_short h = 372;         // 2 byte integer        (kdb: h)
+atom_int   i = 65738;       // 4 byte integer        (kdb: i)
+atom_long  j = 7245645623;  // 8 byte integer        (kdb: j)
+atom_real  x = 174.26;      // 4 byte floating point (kdb: e)
+atom_float y = 827784.123;  // 8 byte floating point (kdb: f)
 
 // there are equivalent list types for all of the atom types - these are aliases for a std::vector
 // and support all of the operations you are used to for manipulating lists.
 list_bool  zl = { false, true, false };
+list_char  cl = { 'a', 'b', 'c' };
+list_short hl = { 1, 2, 3, 4, 5 };
+list_int   il = { 1, 2, 3, 4, 5 };
+list_long  jl = { 1, 2, 3, 4, 5 };
 list_real  xl = { 26.4, 26.1, 85.3 };
 list_float yl = { 100, 57.2, 73.274 };
 
@@ -68,6 +62,77 @@ atom_any b = 42;
 
 // the list_mixed type holds atom_any objects and maps to a list of type 0 in kdb.
 list_mixed ml = { 42, "example", false };
+ml.push_back(73.5);
+ml.push_back('a');
+```
+
+### Conversions
+
+```c++
+atom_float f = 42.5;
+list_float fl = { 42.5, 12.7, 85.2 };
+list_mixed ml = { 42, "example", false };
+
+// conversion to a K object is performed via from_native. This will generate
+// code for the type at compile time as though you had written the conversion
+// by hand.
+K kf  = from_native(f);
+K kfl = from_native(fl);
+K kml = from_native(ml);
+
+// supported types can be nested arbitrarily. all of the std:: types and
+// collections are supported by default. it's easy to add your own custom
+// types to this too.
+template<typename T1, typename T2>
+using dict = std::unordered_map<T1,T2>;
+
+dict<atom_symbol, list_float> weather = { 
+        {"NYC", {77, 64.5, 71.4, 74.7}},
+        {"LDN", {63.2, 51.7, 65.8, 71.5}},
+        {"HK",  {87.5, 83.61, 81.2, 76, 79.9}}
+};
+
+// conversion is exactly the same as with the simple types
+K weather_table = from_native(weather);
+
+// We can convert K datastructures back into native C++ types using to_native.
+// In this case the type is inferred from the second argument that we are placing
+// the result into.
+dict<atom_symbol, list_float> result;
+to_native(weather_table, result);
+
+// you can also call to_native and specify the type explicitly.
+auto result = to_native<dict<atom_symbol, list_float>>(weather_table)
+```
+
+### Adding custom types
+
+```c++
+// The KDB_REGISTER macro can be used to teach the library about custom structures
+// that you would like to serialize. This macro will generate code to convert the
+// data to a mixed list containing the items.
+//
+// The macro takes a list of fields to include in the conversion. Any fields you
+// don't place in the macro will be skipped and will remain uninitialized after
+// a call to to_native.
+struct MyData {
+    float timeout;
+    int sessionId;
+    std::string sessionName;
+};
+KDB_REGISTER(MyData, timeout, sessionId, sessionName)
+
+// after registration, conversion of these types is as simple as calling from_native
+MyData data = { 3050.0, 100, "example session name" };
+K r = from_native(data);
+
+// the new type is also handled automatically within containers
+std::vector<MyData> data_list = {
+        { 3050.0, 100, "example session name"},
+        { 1000.0, 85,  "another session name"},
+        { 8472.0, 10,  "more session names"}
+};
+K y = from_native(data_list);
 ```
 
 ## Building
