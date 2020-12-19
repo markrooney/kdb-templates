@@ -1,7 +1,5 @@
 # Ignore build/vcpkg directories
 *build*/
-vcpkg/
-thirdparty/
 
 # Prerequisites
 *.d
