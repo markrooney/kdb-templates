@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14)
 
-set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake
+set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/thirdparty/vcpkg/scripts/buildsystems/vcpkg.cmake
         CACHE STRING "Vcpkg toolchain file")
 
 project(Example)
@@ -10,7 +10,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -march=native")
 
 find_package(doctest CONFIG REQUIRED)
-find_package(spdlog CONFIG REQUIRED)
 find_package(GTest CONFIG REQUIRED)
 find_package(benchmark CONFIG REQUIRED)
 
@@ -32,7 +31,6 @@ add_executable(benchmarking
 
 target_link_libraries(benchmarking
         "benchmark::benchmark"
-        "spdlog::spdlog"
         pthread)
 
 # ------------------------------------------------------------------------------------- #
@@ -54,5 +52,4 @@ target_include_directories(test-runner
 
 target_link_libraries(test-runner
         "doctest::doctest"
-        "spdlog::spdlog"
         "pthread")

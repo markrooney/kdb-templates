@@ -14,7 +14,6 @@
 #include <array>  // for std::array
 #include <cstddef>// for std::size_t
 #include <cstring>// for std::memcpy
-#include <spdlog/spdlog.h>
 #include <variant>// for std::variant
 #include <vector> // for std::vector
 
@@ -76,12 +75,10 @@ namespace kdb {
     struct custom_type_impl<C<T, A>> {
         static const int tag = 0;
         static inline void set_list(K obj, int idx, const C<T, A> &x) {
-            spdlog::info("c<t,a>::encode");
             kK(obj)[idx] = custom_type_impl<C<T, A>>::encode(x);
         }
 
         static inline C<T, A> get_list(K obj, int idx) {
-            spdlog::info("c<t,a>::get_list");
             C<T, A> res;
             custom_type_impl<C<T, A>>::decode(kK(obj)[idx], res);
             return res;
@@ -96,14 +93,13 @@ namespace kdb {
         }
 
         constexpr static bool decode(K obj, C<T, A> &result) noexcept {
-            spdlog::info("c<t,a>::decode");
             if (obj->t != custom_type_impl<T>::tag) {
                 return false;
             }
 
-            size_t size = obj->n;
+            J size = obj->n;
             C<T, A> temp(size);
-            for (std::size_t i = 0; i < size; i++) {
+            for (J i = 0; i < size; i++) {
                 temp[i] = custom_type_impl<T>::get_list(obj, i);
             }
 
