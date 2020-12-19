@@ -22,6 +22,8 @@
 
 #include <markrooney/kdb.hpp>
 
+using namespace kdb::type;
+
 static void CreatingAtomMANUAL(benchmark::State &state) {
   khp((S) "", -1);
   int data = 42;
