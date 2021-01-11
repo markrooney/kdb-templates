@@ -11,3 +11,6 @@
 [submodule "thirdparty/kx"]
 	path = thirdparty/kx
 	url = https://github.com/KxSystems/kdb.git
+[submodule "thirdparty/amalgamate"]
+	path = thirdparty/amalgamate
+	url = https://github.com/edlund/amalgamate
