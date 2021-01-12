@@ -1,4 +1,6 @@
-# KDB C++ Template Library
+# KDB C++ Template Library v0.0.1
+
+*NOTE: The current version of this library is an initial prototype that is being worked on. The APIs and feature set are not completely stable or well documented.*
 
 - [Introduction](#introduction)
 - [Features](#features)
@@ -29,10 +31,11 @@ compatiblility with these features at [cppreference.com](https://en.cppreference
 ### Basic Types
 
 ```c++
-// just include the kdb.hpp header to pull in all of the functionality
-#include <markrooney/kdb.hpp>
+// just include the kdb.hpp header after k.h in your project to pull in all of the functionality
+#include "k.h"
+#include "kdb.hpp"
 
-// the types live under the kdb::type namespace 
+// the new type aliases live under the kdb::type namespace 
 using kdb::type;
 
 // some convenient type aliases are defined since the macros have been removed by the library
@@ -56,7 +59,7 @@ list_float yl = { 100, 57.2, 73.274 };
 
 // there are variant types that can hold any type of object and will be converted to the correct 
 // type dynamically (note: there is some overhead vs using concrete types due to checking the 
-// type before conversion)
+// type before conversion). These are more useful when converting to C++ native types
 atom_any a = "example";
 atom_any b = 42;
 

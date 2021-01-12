@@ -1,0 +1,8 @@
+{
+  "project": "kdb-templates",
+  "target": "release/kdb.hpp",
+  "sources": [
+    "include/markrooney/kdb.hpp"
+  ],
+  "include_paths": ["include"]
+}
