@@ -10,13 +10,13 @@
 - [Contact](#contact)
 
 ## Introduction
-A template library for efficiently converting to/from native C++ types to KDB without any knowledge of the underlying KDB apis. This is a header only library, so you do not need to install
-anything to use it in your project. You can just copy the `include` directory into your own project.
-
-The instructions below show how to build the benchmarking and test executables used for library development.
 
 **Please Note!** This project requires a C++17 compatible compiler to build as it's using constexpr and std::variant. You can check compiler
 compatiblility with these features at [cppreference.com](https://en.cppreference.com/w/cpp/compiler_support).
+
+A template library for efficiently converting to/from native C++ types to KDB without any knowledge of the underlying KDB apis. This is a header
+only library, so you do not need to install anything to use it in your project. You can just copy the `kdb.hpp` header in the `release` directory
+into your own project.
 
 ## Features
 
@@ -133,7 +133,7 @@ struct SessionStatus {
 KDB_REGISTER(SessionStatus, timeout, sessionId, sessionName, users)
 
 // after registration, conversion of these types is as simple as calling from_native
-MyData session = { 3050.0, 100, "example session name", {}};
+SessionStatus session = { 3050.0, 100, "example session name", {}};
 K kobj = from_native(session);
 
 // the new type is also handled automatically within containers
