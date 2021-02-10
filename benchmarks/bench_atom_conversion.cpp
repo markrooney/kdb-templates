@@ -20,7 +20,7 @@
 #define KXVER 3
 #include "k.h"
 
-#include <markrooney/kdb.hpp>
+#include <kdb.hpp>
 
 using namespace kdb::type;
 

@@ -10,6 +10,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -march=native")
 
 # ------------------------------------------------------------------------------------- #
+# Export Interface                                                                      #
+# ------------------------------------------------------------------------------------- #
+
+add_library(kdb-cpp INTERFACE)
+target_include_directories(kdb-cpp INTERFACE release/)
+
+# ------------------------------------------------------------------------------------- #
 # Dependencies                                                                          #
 # ------------------------------------------------------------------------------------- #
 
@@ -30,6 +37,7 @@ add_executable(benchmarking
         "${CMAKE_SOURCE_DIR}/thirdparty/kx/l64/c.o")
 
 target_link_libraries(benchmarking
+        "kdb-cpp"
         "benchmark::benchmark"
         pthread)
 
@@ -52,5 +60,6 @@ target_include_directories(test-runner
         "${CMAKE_SOURCE_DIR}/include")
 
 target_link_libraries(test-runner
+        "kdb-cpp"
         "doctest::doctest"
         "pthread")

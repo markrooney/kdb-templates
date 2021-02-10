@@ -150,6 +150,34 @@ std::vector<SessionStatus> result;
 to_native(kobj, result);
 ```
 
+## Using the library
+
+The simple way to use this library is to just copy/vendor the `release/kdb.hpp` file into your own project. You will have
+to make sure any flags required for the C++14/17 features that are used are enabled in your build system.
+
+You can also add an external dependency using the FetchContent module in CMake. This will download the library at configuration
+time and will make the headers available through the `kdb-cpp` target. Using this cmake target will ensure that all of the
+required flags are propagated to any targets that link against it.
+
+```cmake
+include(FetchContent)
+
+# Download the library from this repository
+FetchContent_Declare(kdb-cpp
+    GIT_REPOSITORY https://github.com/markrooney/kdb-templates.git
+    GIT_TAG v0.0.1)
+
+# Populate the content
+FetchContent_GetProperties(kdb-cpp)
+if(NOT kdb-cpp_POPULATED)
+    FetchContent_Populate(kdb-cpp)
+    add_subdirectory(${kdb-cpp_SOURCE_DIR} ${kdb-cpp_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif()
+
+# Link against kdb-cpp anywhere that you need the header file to be available
+target_link_libraries(<your-library-name> PRIVATE kdb-cpp)
+```
+
 ## Building
 1. Checkout the project with submodules. This will also checkout vcpkg for you.
 ```bash
