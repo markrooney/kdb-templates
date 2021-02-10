@@ -183,6 +183,15 @@ cmake --build build
 ./build/test-runner
 ```
 
+# Combining headers into one file
+
+If you have made a change to the library and would like to rebuild the combined header file, you can do so using the
+amalgamate scripts in the thirdparty folder. This should create a new `kdb.hpp` file in the `release/` folder.
+
+```shell
+python thirdparty/amalgamate/amalgamate.py -c config.json -s .
+```
+
 ## License
 
 Copyright 2020 Mark Rooney
